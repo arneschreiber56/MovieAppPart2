@@ -1,40 +1,42 @@
 """
-Codio Project: My Movies Database – Extended Version
+Codio Project: My Movies Database – Extended CLI Application
 
-Overview
-This version expands the previous CLI-based movie application, which
-implemented two main command categories:
-	•	CRUD operations: Create, Read, Update, Delete
-	•	Analysis features: highest-rated movies, lowest-rated movies, etc.
+This module implements a menu-driven command-line application for
+managing a personal movie database as a MasterSchool project.
 
-The project now integrates more advanced concepts and improvements.
+The application supports full CRUD functionality (Create, Read,
+Update, Delete) as well as analytical and visualization features.
+Each movie is represented as a dictionary containing the following
+attributes:
 
-New Features
-	1.	Enhanced Data Structure
-The simple dictionary structure (title → rating) has been replaced
-with a more complex data model that stores multiple attributes per movie,
-such as title, rating, and release year.
-	2.	Persistent Storage
-Previously, all data was stored in memory and lost when the application
-terminated. This version introduces persistent storage, ensuring that
-added or modified movies remain available after restarting the program.
-	3.	Improved Robustness
-The application is hardened against unexpected user input.
-Invalid entries no longer cause crashes. Instead, the user is
-prompted again, improving stability and overall user experience.
+    - title (str): The movie title
+    - rating (float): The user-defined rating (1–10)
+    - year (int): The release year
 
-The program remains menu-driven and continues to provide CRUD
-and analytical functionality within a structured CLI environment.
+Features
+--------
+- List all stored movies
+- Add new movies
+- Delete existing movies
+- Update movie ratings
+- Display statistical insights (average, median, best, worst)
+- Select a random movie
+- Search movies (including fuzzy matching)
+- Sort movies by rating
+- Generate and save a histogram of ratings
+
 """
 
-import statistics
-import random
 import difflib
+import random
+import statistics
+
 import matplotlib.pyplot as plt
-# for a little bit more design and style:
 from rich.console import Console
-console = Console() #fits nicer in in snake.case
 from rich.panel import Panel
+
+
+console = Console()  # fits nicer in snake_case
 
 
 def start_screen():
@@ -44,12 +46,13 @@ def start_screen():
     Returns:
         str: The user's menu selection as a string.
     """
-    console.print(Panel(
+    console.print(
+        Panel(
             "[bold_magenta]My Movies Database[/bold_magenta]",
-        expand=False,
-        border_style="magenta"
+            expand=False,
+            border_style="magenta",
         )
-        )
+    )
     menu = (
         "[cyan]0. Exit\n"
         "1. List movies\n"
@@ -89,7 +92,6 @@ def movie_db_function_list(movies):
     for movie in movies:
         print(f"{movie['title']}: {movie['rating']} ({movie['year']})")
     console.input("\n[dim]Press enter to continue[/dim]")
-    return
 
 
 def movie_db_function_add(movies):
@@ -192,7 +194,6 @@ def movie_db_function_stats(movies):
     print(f"Best movie: {best_movie['title']}, {best_movie['rating']}")
     print(f"Worst movie: {worst_movie['title']}, {worst_movie['rating']}")
     console.input("\n[dim]Press enter to continue[/dim]")
-    return
 
 
 def movie_db_function_random(movies):
@@ -211,7 +212,6 @@ def movie_db_function_random(movies):
         f"it's rated {random_movie['rating']} ({random_movie['year']})"
     )
     console.input("\n[dim]Press enter to continue[/dim]")
-    return
 
 
 def movie_db_function_search(movies):
@@ -264,7 +264,6 @@ def movie_db_function_search(movies):
     else:
         print("No similar movies found.")
     console.input("\n[dim]Press enter to continue[/dim]")
-    return
 
 
 def movie_db_function_sort(movies):
@@ -285,7 +284,6 @@ def movie_db_function_sort(movies):
     for movie in sorted_to_ratings:
         print(f"{movie['title']}: {movie['rating']} ({movie['year']})")
     console.input("\n[dim]Press enter to continue[/dim]")
-    return
 
 
 def movie_db_function_histo(movies):
@@ -315,7 +313,6 @@ def movie_db_function_histo(movies):
     file_name = input("\nPlease enter the filename for the histogram: ")
     plt.savefig(f"{file_name}.png", dpi=150)
     console.input("\n[dim]Press enter to continue[/dim]")
-    return
 
 
 def movie_db_function_quit(_):
@@ -323,7 +320,8 @@ def movie_db_function_quit(_):
     Terminates the application gracefully.
 
     Args:
-        _ (list[dict]): Unused parameter to maintain consistent function signature.
+        _ (list[dict]): Unused parameter to maintain consistent function
+        signature.
 
     Returns:
         None
@@ -365,7 +363,7 @@ def main():
             function_choice = functions_dictionary[choice]
             function_choice(movies)
         except KeyError:
-            console.print("[red]No a valid entry! Please choose again.[/red]")
+            console.print("[red]Not a valid entry! Please choose again.[/red]")
 
 
 if __name__ == "__main__":
