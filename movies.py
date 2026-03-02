@@ -103,9 +103,9 @@ def add_movie_logic(title, rating, year, movies):
 
 def movie_db_function_add(movies):
     """CLI wrapper to add a movie with user input."""
-    title = input("\nEnter new movie name: ")
-    rating = float(input("Enter new movie rating(0-10): "))
-    year = int(input("Enter release year: "))
+    title = console.input("\nEnter new movie name: ")
+    rating = float(console.input("Enter new movie rating(0-10): "))
+    year = int(console.input("Enter release year: "))
     movies = add_movie_logic(title, rating, year, movies)
     console.input("\n[dim]Press enter to continue[/dim]")
     return movies
@@ -122,7 +122,7 @@ def delete_movie_logic(title, movies):
 
 def movie_db_function_del(movies):
     """CLI wrapper to delete a movie."""
-    title = input("\nEnter movie name to delete: ")
+    title = console.input("\nEnter movie name to delete: ")
     movies, success = delete_movie_logic(title, movies)
     if success:
         print(f"Movie {title} successfully deleted")
@@ -146,12 +146,12 @@ def update_movie_logic(title, new_rating, movies):
 
 def movie_db_function_update(movies):
     """CLI wrapper to update a movie rating."""
-    title = input("\nEnter movie name: ")
-    new_rating = float(input("Enter new movie rating (1-10): "))
+    title = console.input("\nEnter movie name: ")
+    new_rating = float(console.input("Enter new movie rating (1-10): "))
     movies, success = update_movie_logic(title, new_rating, movies)
-    if success:
+    if success is True:
         print(f"Movie {title} successfully updated")
-    elif not success:
+    elif success is False:
         print(f"Rating {new_rating} is invalid")
     else:
         print(f"Movie {title} doesn't exist!")
@@ -176,12 +176,14 @@ def stats_logic(movies):
     med = statistics.median(ratings)
 
     sorted_movies = sort_movies_logic(movies)
+    highest_rating = sorted_movies[0]["rating"]
+    lowest_rating = sorted_movies[-1]["rating"]
     best_movies = []
     worst_movies = []
     for movie in sorted_movies:
-        if movie["rating"] == sorted_movies[0]["rating"]:
+        if movie["rating"] == highest_rating:
             best_movies.append(movie)
-        elif movie["rating"] == sorted_movies[-1]["rating"]:
+        elif movie["rating"] == lowest_rating:
             worst_movies.append(movie)
 
     return avg, med, best_movies, worst_movies
@@ -261,7 +263,7 @@ def movie_db_function_search(movies):
     """
     CLI wrapper for searching movies.
     """
-    what_to_search = input("\nEnter part of movie name: ")
+    what_to_search = console.input("\nEnter part of movie name: ")
     exact_matches, close_matches = search_movie_logic(what_to_search, movies)
 
     if exact_matches:
@@ -326,7 +328,7 @@ def movie_db_function_histo(movies):
     plt.ylabel("Frequency")
     # Dateinamen abfragen und das Histogram als .png in den
     # Projektspeicherplatz speichern
-    file_name = input("\nPlease enter the filename for the histogram: ")
+    file_name = console.input("\nPlease enter the filename for the histogram: ")
     plt.savefig(f"{file_name}.png", dpi=150)
     console.input("\n[dim]Press enter to continue[/dim]")
 
