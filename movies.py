@@ -94,122 +94,121 @@ def movie_db_function_list(movies):
     console.input("\n[dim]Press enter to continue[/dim]")
 
 
+def add_movie_logic(title, rating, year, movies):
+    """Add a new movie to the list. Returns updated movies list."""
+    if 1 <= rating <= 10:
+        movies.append({"title": title, "rating": rating, "year": year})
+    return movies
+
+
 def movie_db_function_add(movies):
-    """
-    Prompts the user to enter a new movie and appends it to the database.
+    """CLI wrapper to add a movie with user input."""
+    title = input("\nEnter new movie name: ")
+    rating = float(input("Enter new movie rating(0-10): "))
+    year = int(input("Enter release year: "))
+    movies = add_movie_logic(title, rating, year, movies)
+    console.input("\n[dim]Press enter to continue[/dim]")
+    return movies
 
-    Args:
-        movies (list[dict]): The movie database.
 
-    Returns:
-        list[dict]: The updated movie database.
-    """
-    new_movie_name = input("\nEnter new movie name: ")
-    new_movie_rating_float = float(input("Enter new movie rating(0-10): "))
-    new_movie_year = int(input("Enter release year: "))
-    if 1 <= new_movie_rating_float <= 10:
-        movies.append({
-            "title": new_movie_name,
-            "rating": new_movie_rating_float,
-            "year": new_movie_year
-        })
-        console.input("\n[dim]Press enter to continue[/dim]")
-        return movies
-    else:
-        print(f"Rating {new_movie_rating_float} is invalid")
-        console.input("\n[dim]Press enter to continue[/dim]")
-        return movies
+def delete_movie_logic(title, movies):
+    """Delete a movie by title. Returns updated movies list and success flag."""
+    for movie in movies:
+        if movie["title"] == title:
+            movies.remove(movie)
+            return movies, True
+    return movies, False
 
 
 def movie_db_function_del(movies):
-    """
-    Removes a movie from the database by its title.
-
-    Args:
-        movies (list[dict]): The movie database.
-
-    Returns:
-        list[dict]: The updated movie database.
-    """
-    movie_to_del = input("\nEnter movie name to delete: ")
-    for movie in movies:
-        if movie["title"] == movie_to_del:
-            movies.remove(movie)
-            print(f"Movie {movie_to_del} successfully deleted")
-            return movies
+    """CLI wrapper to delete a movie."""
+    title = input("\nEnter movie name to delete: ")
+    movies, success = delete_movie_logic(title, movies)
+    if success:
+        print(f"Movie {title} successfully deleted")
     else:
-        print(f"Movie {movie_to_del} doesn't exist!")
-        return movies
+        print(f"Movie {title} doesn't exist!")
+    console.input("\n[dim]Press enter to continue[/dim]")
+    return movies
+
+
+def update_movie_logic(title, new_rating, movies):
+    """Update the rating of a movie. Returns updated movies list
+    and success flag."""
+    for movie in movies:
+        if movie["title"] == title:
+            if 1 <= new_rating <= 10:
+                movie["rating"] = new_rating
+                return movies, True
+            return movies, False
+    return movies, None  # Movie not found
 
 
 def movie_db_function_update(movies):
-    """
-    Updates the rating of an existing movie in the database.
-
-    Args:
-        movies (list[dict]): The movie database.
-
-    Returns:
-        list[dict]: The updated movie database.
-    """
-    movie_to_update = input("\nEnter movie name: ")
-    for movie in movies:
-        if movie["title"] == movie_to_update:
-            new_rating = float(input("Enter new movie rating (1-10): "))
-            if 1 <= new_rating <= 10:
-                movie["rating"] = new_rating
-                print(f"Movie {movie_to_update} successfully updated")
-                return movies
-            else:
-                print(f"Rating {new_rating} is invalid")
-                return movies
+    """CLI wrapper to update a movie rating."""
+    title = input("\nEnter movie name: ")
+    new_rating = float(input("Enter new movie rating (1-10): "))
+    movies, success = update_movie_logic(title, new_rating, movies)
+    if success:
+        print(f"Movie {title} successfully updated")
+    elif not success:
+        print(f"Rating {new_rating} is invalid")
     else:
-        print(f"Movie {movie_to_update} doesn't exist!")
-        return movies
+        print(f"Movie {title} doesn't exist!")
+    console.input("\n[dim]Press enter to continue[/dim]")
+    return movies
+
+
+def sort_movies_logic(movies):
+    """Return movies sorted by rating descending and title ascending."""
+    sorted_to_ratings = sorted(
+        movies,
+        key=lambda m: (-m["rating"], m["title"])
+    )
+    return sorted_to_ratings
+
+
+def stats_logic(movies):
+    """Compute average, median, best and worst movies. Gets sorted movie list
+    from sort_movies_logic()"""
+    ratings = [movie["rating"] for movie in movies]
+    avg = statistics.mean(ratings)
+    med = statistics.median(ratings)
+
+    sorted_movies = sort_movies_logic(movies)
+    best_movies = []
+    worst_movies = []
+    for movie in sorted_movies:
+        if movie["rating"] == sorted_movies[0]["rating"]:
+            best_movies.append(movie)
+        elif movie["rating"] == sorted_movies[-1]["rating"]:
+            worst_movies.append(movie)
+
+    return avg, med, best_movies, worst_movies
 
 
 def movie_db_function_stats(movies):
-    """
-    Calculates and displays statistical insights about movie ratings,
-    including average, median, all highest-rated, and all lowest-rated movies.
-
-    Args:
-        movies (list[dict]): The movie database.
-
-    Returns:
-        None
-    """
-    average_rating = statistics.mean(movie["rating"] for movie in movies)
-    median_rating = statistics.median(movie["rating"] for movie in movies)
-    print(f"Average rating: {average_rating:.2f}")
-    print(f"Median rating: {median_rating}")
-
-    sorted_to_ratings = sorted(
-        movies,
-        key=lambda m: (m["rating"], m["title"]),
-        reverse=True
-    )
-
-    # Best and worst ratings
-    highest_rating = sorted_to_ratings[0]["rating"]
-    lowest_rating = sorted_to_ratings[-1]["rating"]
-
-    print("Best movies:")
-    for movie in sorted_to_ratings:
-        if movie["rating"] == highest_rating:
-            print(f"  - {movie['title']}, {movie['rating']} ({movie['year']})")
-
-    print("Worst movies:")
-    for movie in sorted_to_ratings:
-        if movie["rating"] == lowest_rating:
-            print(f"  - {movie['title']}, {movie['rating']} ({movie['year']})")
-
+    """CLI wrapper to display stats."""
+    avg, med, best, worst = stats_logic(movies)
+    print(f"Average rating: {avg:.2f}")
+    print(f"Median rating: {med}")
+    for movie in best:
+        print(f"Best movie: {movie['title']}, {movie['rating']}")
+    for movie in worst:
+        print(f"Worst movie: {movie['title']}, {movie['rating']}")
     console.input("\n[dim]Press enter to continue[/dim]")
+
+
+def get_random_logic(movies):
+    """Select a random movie dictionary from the list of movies
+    and returns it."""
+    random_movie = random.choice(movies)
+    return random_movie
 
 
 def movie_db_function_random(movies):
     """
-    Selects and displays a random movie from the database.
+    Displays a random movie from the database selected by random_logic().
 
     Args:
         movies (list[dict]): The movie database.
@@ -217,7 +216,7 @@ def movie_db_function_random(movies):
     Returns:
         None
     """
-    random_movie = random.choice(movies)
+    random_movie = get_random_logic(movies)
     print(
         f"\nYour movie for tonight: {random_movie['title']}, "
         f"it's rated {random_movie['rating']} ({random_movie['year']})"
@@ -225,62 +224,71 @@ def movie_db_function_random(movies):
     console.input("\n[dim]Press enter to continue[/dim]")
 
 
-def movie_db_function_search(movies):
+def search_movie_logic(what_to_search, movies):
     """
-    Searches for a movie by partial title match. If no direct match is found,
-    suggests similar titles using fuzzy matching.
+    Search for movies by partial title match and fuzzy similarity.
 
     Args:
+        search_term (str): The term to search for.
         movies (list[dict]): The movie database.
 
     Returns:
-        None
+        tuple:
+            - list[dict]: Exact/partial matches
+            - list[str]: Similar movie titles (fuzzy matches)
     """
-    # zum Fuzzy Matching
-    what_to_search = input("\nEnter part of movie name: ").lower()
-    # normale Suche
-    found_any = False
-    for movie in movies:
-        if what_to_search in movie["title"].lower():
-            print(f"{movie['title']}, {movie['rating']} ({movie['year']})")
-            found_any = True
-    if found_any:
-        console.input("\n[dim]Press enter to continue[/dim]")
-        return
-    # nun zum Fuzzy Matching, falls die Normale suche nicht ergeben hat
-    print("\nMovie not found!")
-    # Mit der get_close_matches-Funktion von difflib ähnliche Einträge
-    # in movielist finden und als Liste ausgeben
-    # Fuzzy Matching vorbereiten mit einer Liste von Filmtiteln:
+    what_to_search = what_to_search.lower()
+    # Normal partial match
+    exact_matches = [
+        movie for movie in movies
+        if what_to_search in movie["title"].lower()
+    ]
+    if exact_matches:
+        return exact_matches, []
+    # Fuzzy matching
     movie_titles = [movie["title"] for movie in movies]
     close_matches = difflib.get_close_matches(
         what_to_search,
         movie_titles,
-        # Anzahl der maximalen Ausgabe ähnlicher Filmnamen
         n=3,
-        # Sensitivtät der Suche 0.1 → können total unterschiedlich sein,
-        # 1 → Müssen exakt gleich sein
         cutoff=0.4
     )
-    if close_matches:
-        print("Similar movies found:")
-        print(close_matches)
-        for similar_name in close_matches:
-            for movie in movies:
-                if movie["title"] == similar_name:
-                    print(f"  - {movie['title']}, "
-                          f"{movie['rating']} "
-                          f"({movie['year']})"
-                          )
+
+    return [], close_matches
+
+
+def movie_db_function_search(movies):
+    """
+    CLI wrapper for searching movies.
+    """
+    what_to_search = input("\nEnter part of movie name: ")
+    exact_matches, close_matches = search_movie_logic(what_to_search, movies)
+
+    if exact_matches:
+        for movie in exact_matches:
+            print(f"{movie['title']}, {movie['rating']} ({movie['year']})")
     else:
-        print("No similar movies found.")
+        print("\nMovie not found!")
+        if close_matches:
+            print("Similar movies found:")
+            for similar_name in close_matches:
+                for movie in movies:
+                    if movie["title"] == similar_name:
+                        print(
+                            f"  - {movie['title']}, "
+                            f"{movie['rating']} "
+                            f"({movie['year']})"
+                        )
+        else:
+            print("No similar movies found.")
     console.input("\n[dim]Press enter to continue[/dim]")
 
 
 def movie_db_function_sort(movies):
     """
     Displays all movies sorted by rating in descending order and
-    alphabetically by title as a secondary criterion.
+    alphabetically by title as a secondary criterion. Gets sorted
+    movie list from sort_movies_logic().
 
     Args:
         movies (list[dict]): The movie database.
@@ -288,10 +296,7 @@ def movie_db_function_sort(movies):
     Returns:
         None
     """
-    sorted_to_ratings = sorted(
-        movies,
-        key=lambda m: (-m["rating"], m["title"])
-    )
+    sorted_to_ratings = sort_movies_logic(movies)
     for movie in sorted_to_ratings:
         print(f"{movie['title']}: {movie['rating']} ({movie['year']})")
     console.input("\n[dim]Press enter to continue[/dim]")
