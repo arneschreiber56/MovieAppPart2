@@ -26,8 +26,8 @@ Features
 - Generate and save a histogram of ratings
 
 """
-
 import movie_storage_sql as storage
+import requests
 import sys
 
 import difflib
@@ -40,6 +40,10 @@ from rich.panel import Panel
 
 
 console = Console()  # fits nicer in snake_case
+
+
+URL = "https://www.omdbapi.com/"
+API_KEY = "5910c729"
 
 
 def print_messages():
@@ -58,13 +62,11 @@ def print_messages():
         "error_movie_exists": "[red]Movie already exists![/red]",
         "error_not_valid": "[red]Your entry is not valid![/red]",
         "error_rating": "[red]Rating must be between 1 and 10![/red]",
+        "error_get_response": "[red]Unexpected response from API-request[/red]",
+        "error_valid_year": "[red] No valid year available![/red]",
+        "error_valid_rating": "[red] No valid rating available![/red]"
     }
     return messages
-
-
-
-
-
 
 
 def start_screen():
@@ -148,36 +150,70 @@ def check_double_titles(title):
     return False
 
 
+def get_api_response(search_title):
+    """Sends an api request to OMDb API to request for movie information
+    returns a dictionary with movie information or error content, else None. """
+    data = {
+        "t": search_title,
+        "apikey": API_KEY
+    }
+    try:
+        response = requests.get(URL, params=data, timeout= 10)
+    except requests.exceptions.RequestException as e:
+        return None, str(e)
+    if response.status_code == 200:
+        return response.json(), None
+    else:
+        return None, None
+
+
 def movie_db_function_add():
     """CLI wrapper to add a movie with user input."""
     while True:
-        title = console.input(print_messages()["input_name"]).strip()
-        if not title:
+        search_title = console.input(print_messages()["input_name"]).strip()
+        if not search_title:
             console.print(print_messages()["error_not_valid"])
             console.input(print_messages()["continue"])
             return
-        elif check_double_titles(title):
+        elif check_double_titles(search_title):
             console.print(print_messages()["error_movie_exists"])
         else:
             break
 
-    while True:
-        try:
-            rating = float(console.input(print_messages()["input_rating"]))
-            if check_rating(rating):
-                break
-            console.print(print_messages()["error_rating"])
-        except ValueError:
-            console.print(print_messages()["error_not_valid"])
+    movie_info, error_message = get_api_response(search_title)
 
-    while True:
-        try:
-            year = int(console.input(print_messages()["input_year"]))
+    if error_message:
+        console.print(f"[red]{error_message}[/red]")
+        console.input(print_messages()["continue"])
+        return
+    if not movie_info or movie_info.get("Title") == "N/A":
+        console.print(print_messages()["error_get_response"])
+        console.input(print_messages()["continue"])
+        return
+    if movie_info.get("Response") == "False":
+        console.print(f"[red]{movie_info.get('Error')}[/red]")
+        console.input(print_messages()["continue"])
+        return
+
+    title = movie_info.get("Title")
+    if movie_info.get("Year").isdigit():
+        year = int(movie_info.get("Year"))
+    else:
+        console.print(print_messages()["error_valid_year"])
+        console.input(print_messages()["continue"])
+        return
+    rating = None
+    for r in movie_info.get("Ratings", []): #Returns empty list if no "Ratings"
+        if r["Source"] == "Internet Movie Database":
+            rating = float(r["Value"].split("/")[0])
             break
-        except ValueError:
-            console.print(print_messages()["error_not_valid"])
+    if not rating:
+        console.print(print_messages()["error_valid_rating"])
+        console.input(print_messages()["continue"])
+        return
+    poster_url = movie_info.get("Poster")
 
-    storage.add_movie(title, year, rating)
+    storage.add_movie(title, year, rating, poster_url)
     console.input(print_messages()["continue"])
 
 

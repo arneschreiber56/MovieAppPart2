@@ -14,7 +14,8 @@ with engine.begin() as connection:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT UNIQUE NOT NULL,
             year INTEGER NOT NULL,
-            rating REAL NOT NULL
+            rating REAL NOT NULL,
+            poster TEXT
         )
     """))
 
@@ -24,7 +25,7 @@ def list_movies():
     try:
         with engine.connect() as connection:
             result = connection.execute(text(
-                "SELECT title, year, rating FROM movies")
+                "SELECT title, year, rating, poster FROM movies")
             )
             movies = result.fetchall()
     except exc.SQLAlchemyError as e:
@@ -34,21 +35,25 @@ def list_movies():
         if len(movies) > 0:
             return {
                 row[0]: {"year": row[1],
-                         "rating": row[2]}
+                         "rating": row[2],
+                         "poster": row[3]}
                 for row in movies}
         else:
             return None
 
 
-def add_movie(title, year, rating):
+def add_movie(title, year, rating, poster):
     """Add a new movie to the database."""
     with engine.begin() as connection:
         try:
             connection.execute(
                 text(
-                    "INSERT INTO movies (title, year, rating) "
-                    "VALUES (:title, :year, :rating)"),
-                               {"title": title, "year": year, "rating": rating})
+                    "INSERT INTO movies (title, year, rating, poster) "
+                    "VALUES (:title, :year, :rating, :poster)"),
+                               {"title": title,
+                                "year": year,
+                                "rating": rating,
+                                "poster": poster})
             print(f"Movie '{title}' added successfully.")
         except exc.SQLAlchemyError as e:
             print(f"Error: {e}")
