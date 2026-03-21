@@ -209,3 +209,7 @@ __marimo__/
 .git
 test_movies.py
 *.png
+sanity_check.py
+api_test.py
+movies_first_try.db
+.env

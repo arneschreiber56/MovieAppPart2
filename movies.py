@@ -27,10 +27,12 @@ Features
 
 """
 import movie_storage_sql as storage
+import os
 import requests
 import sys
 
 import difflib
+from dotenv import load_dotenv
 import random
 import statistics
 
@@ -38,12 +40,13 @@ import matplotlib.pyplot as plt
 from rich.console import Console
 from rich.panel import Panel
 
+load_dotenv()
 
 console = Console()  # fits nicer in snake_case
 
 
-URL = "https://www.omdbapi.com/"
-API_KEY = "5910c729"
+URL = os.getenv("URL")
+API_KEY = os.getenv("API_KEY")
 
 
 def print_messages():
