@@ -59,6 +59,7 @@ def print_messages():
         "input_year": "Enter release year: ",
         "input_histo_name": "\n[green]Please enter the filename for the "
                             "histogram: [/green]",
+        "error_db": "[red]Could not process Database correctly![/red]",
         "no_movies_error": "[red]No movies in the DB available![/red]",
         "error_no_movie": "[red]Could not find your movie in the DB![/red]",
         "error_no_sim_movie": "[red]No similar movies found.[/red]",
@@ -483,6 +484,46 @@ def movie_db_function_histo():
             console.print(print_messages()["error_not_valid"])
     plt.savefig(f"{file_name}.png", dpi=150)
     console.input(print_messages()["continue"])
+
+
+def generate_movie_grid_html():
+    """creates the movie grid HTML snippet"""
+    movie_dict = storage.list_movies()
+    if not movie_dict:
+        console.print(print_messages()["error_db"])
+        console.input(print_messages()["continue"])
+        return
+    movie_grid_template = '''
+    <li>
+    <div class="movie">
+    <img class="movie-poster" src="__poster-url__" title= "Movie poster" alt="No movie poster available">
+    <div class="movie-title">__movie-title__</div>
+    <div class="movie-year">__movie-year__</div>
+    </div>
+    </li>
+    '''
+    html_grid_snippet = ""
+    if len(movie_dict) > 0:
+        for title, data in movie_dict.items():
+            movie_grid_item = movie_grid_template.replace(
+                "__poster-url__", data.get("poster", "")
+            )
+            movie_grid_item = movie_grid_item.replace(
+                "__movie-title__", title
+            )
+            movie_grid_item = movie_grid_item.replace(
+                "__movie-year__", str(data["year"])
+            )
+            html_grid_snippet = html_grid_snippet + " " + movie_grid_item
+        return html_grid_snippet
+    else:
+        return "<li><h3>No Movies in Database available<h3></li>"
+
+
+def generate_webpage():
+    """generates webpage by structuring the procedure of the index.html creation
+    """
+    pass
 
 
 def movie_db_function_quit():
